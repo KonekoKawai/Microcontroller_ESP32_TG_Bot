@@ -2,4 +2,4 @@
 Обрабатывает запросы с Arsagera API и передает полученные данные в Telegram API.
 Telegram API в свою очередь отправляет пост в мой публичный канал с хэштегом #Арсагера.
 
-![Пример работы бота](https://raw.githubusercontent.com/KonekoKawai/Microcontroller_ESP32_TG_Bot/blob/main/example_of_work.jpg)
+![Пример работы бота](https://raw.githubusercontent.com/KonekoKawai/Microcontroller_ESP32_TG_Bot/blob/main/example_of_work.png)
