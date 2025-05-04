@@ -38,13 +38,14 @@ UniversalTelegramBot bot(BOTtoken, clientTgBot);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void SyncTime() // Запуск Синхронизация до 21:55+ по +5 времени
+void SyncTime() // Запуск Синхронизации до 21:55+ по +5 времени
 {
-
+  Serial.print("\nStart Sync");
   int hour_int = tm.tm_hour+1;
   int minute_int = tm.tm_min;
-  Serial.print("Hour: " + String(hour_int));
-  Serial.print("Minute: " + String(minute_int));
+
+  Serial.print("\nHour: " + String(hour_int));
+  Serial.print(" : Minute: " + String(minute_int));
 
   while (hour_int != 21)
   {
@@ -52,7 +53,7 @@ void SyncTime() // Запуск Синхронизация до 21:55+ по +5 �
         hour_int = 0;
     hour_int++;
     delay(oneHourMlSecond); // ЖДдём час
-    Serial.print("\nCurrent hour: " + hour_int);
+    Serial.print("\nCurrent hour: " + String(hour_int));
   }
   Serial.print("\n---------TIME 21:XX--------\n\n");
 
@@ -62,10 +63,10 @@ void SyncTime() // Запуск Синхронизация до 21:55+ по +5 �
         minute_int = 0;
     minute_int++;
     delay(oneMinuteMlSecond); // ЖДдём минуту
-    Serial.print("\nCurrent minute: " + minute_int);
+    Serial.print("\nCurrent minute: " + String(minute_int));
   }
   Serial.print("\n---------TIME 21:55+--------\n\n");
-
+  Serial.print("\nSync - successful");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -238,19 +239,19 @@ float parsingArsagera(String arsaData) // Функция вывод значен
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-String getTime()
+String getTime() // Дата должна быть за прошлый день Если сегодня 5 число То нужно вывести информацию за 4 Т.к биржевые ориентиры обновляются только на следющий день
 {
   String dateFormated;
   // отдельно выписываем год месяц и дату и приводим к виду XX 
   String year = String(tm.tm_year + 1900);
   String month;
-  if(tm.tm_mon + 1 < 9)
+  if(tm.tm_mon + 1 < 10)
     month = "0" + String(tm.tm_mon + 1);
   else
     month = String(tm.tm_mon + 1);
 
   String day;
-  if(tm.tm_mday < 9)
+  if(tm.tm_mday < 11)
   {
     if(tm.tm_mday == 1)
       day = "0" + String(tm.tm_mday);
@@ -276,8 +277,9 @@ String smile;
 
 void loop() 
 {
-  SyncTime(); // Синхронизируемся до 21:55
-  String date_for_Arsa = getTime(); // Получаем дату для запроса
+  Serial.print("\nStart Loop");
+  SyncTime(); // Запуск Синхронизации
+  String date_for_Arsa = getTime();  // Получаем дату для запроса
   String arsaData = reqArsagera(date_for_Arsa); // Передаем в запрос нужную дату 
   if(arsaData != "0") // Если ошибка конекта нет
   {
@@ -325,4 +327,5 @@ void loop()
   }
 
   delay(oneDayMlSecond-2*oneHourMlSecond); // Сутки - 2 часа Для синхронизации
+  Serial.print("\End Loop");
 }
