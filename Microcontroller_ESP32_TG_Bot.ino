@@ -99,6 +99,30 @@ void setup() { // Первичная настройка отладки + под�
   configTime(NTP_TZ_SETTING, NTP_SERVER); // Установка времени 
   time(&now);
   localtime_r(&now, &tm);
+  while(tm.tm_year + 1900 == 1970)
+  {
+    delay(12000);
+    Serial.print("year not formated (1970) - reboot ");
+    configTime(NTP_TZ_SETTING, NTP_SERVER); // Установка времени 
+    time(&now);
+    localtime_r(&now, &tm);
+  }
+    
+
+  Serial.print("year:");
+  Serial.print(tm.tm_year + 1900);  // years since 1900
+  Serial.print("\tmonth:");
+  Serial.print(tm.tm_mon + 1);      // January = 0 (!)
+  Serial.print("\tday:");
+  Serial.print(tm.tm_mday);         // day of month
+  Serial.print("\thour:");
+  Serial.print(tm.tm_hour);         // hours since midnight  0-23
+  Serial.print("\tmin:");
+  Serial.print(tm.tm_min);          // minutes after the hour  0-59
+  Serial.print("\tsec:");
+  Serial.print(tm.tm_sec);          // seconds after the minute  0-61*
+  Serial.print("\twday");
+  Serial.print(tm.tm_wday);         // days since Sunday 0-6
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -239,7 +263,7 @@ float parsingArsagera(String arsaData) // Функция вывод значен
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-String getTime() // Дата должна быть за прошлый день Если сегодня 5 число То нужно вывести информацию за 4 Т.к биржевые ориентиры обновляются только на следющий день
+String getTime()
 {
   String dateFormated;
   // отдельно выписываем год месяц и дату и приводим к виду XX 
@@ -284,7 +308,7 @@ void loop()
   if(arsaData != "0") // Если ошибка конекта нет
   {
 
-    Serial.print("Arsagere requests:");
+    Serial.print("Arsagere requests:\n");
     Serial.print(arsaData);
 
     buffValue = parsingArsagera(arsaData);
@@ -293,11 +317,11 @@ void loop()
       Serial.print("\nbuffValue -1\n");
     }
 
-    if(valueMetrik != 0) // Если ошибки парсинга метрики нет 
+    if(buffValue != 0) // Если ошибки парсинга метрики нет 
     {
       valueMetrik = buffValue;
       Serial.print("Arsagere value:");
-      Serial.print(valueMetrik);
+      Serial.print(String(valueMetrik));
       
       if (valueMetrik != 0 and preValueMetrik != 0)
       {
@@ -323,6 +347,8 @@ void loop()
       }
       
     }
+    else
+      Serial.print("Not found metrik");
 
   }
 
