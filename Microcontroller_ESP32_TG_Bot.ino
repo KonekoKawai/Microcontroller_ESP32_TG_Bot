@@ -56,7 +56,6 @@ void SyncTime() // Запуск Синхронизации до 21:55+ по +5 �
     Serial.print("\nCurrent hour: " + String(hour_int));
   }
   Serial.print("\n---------TIME 21:XX--------\n\n");
-
   while (minute_int < 55)
   {
     if (minute_int == 60)
@@ -65,6 +64,7 @@ void SyncTime() // Запуск Синхронизации до 21:55+ по +5 �
     delay(oneMinuteMlSecond); // ЖДдём минуту
     Serial.print("\nCurrent minute: " + String(minute_int));
   }
+  //Serial.print("\min:" + String(tm.tm_min));
   Serial.print("\n---------TIME 21:55+--------\n\n");
   Serial.print("\nSync - successful");
 }
@@ -95,34 +95,37 @@ void setup() { // Первичная настройка отладки + под�
   Serial.println(WiFi.localIP());
   Serial.println("Connect successful");
   delay(1000);
-
+  
   configTime(NTP_TZ_SETTING, NTP_SERVER); // Установка времени 
   time(&now);
   localtime_r(&now, &tm);
-  while(tm.tm_year + 1900 == 1970)
+
+  if(tm.tm_year + 1900 == 1970)
   {
-    delay(12000);
-    Serial.print("year not formated (1970) - reboot ");
-    configTime(NTP_TZ_SETTING, NTP_SERVER); // Установка времени 
-    time(&now);
-    localtime_r(&now, &tm);
+    while(tm.tm_year + 1900 == 1970)
+    {
+      delay(oneMinuteMlSecond*2);
+      Serial.print("year not formated (1970) - reboot ");
+      configTime(NTP_TZ_SETTING, NTP_SERVER); // Установка времени 
+      time(&now);
+      localtime_r(&now, &tm);
+    }
   }
-    
 
   Serial.print("year:");
   Serial.print(tm.tm_year + 1900);  // years since 1900
-  Serial.print("\tmonth:");
-  Serial.print(tm.tm_mon + 1);      // January = 0 (!)
-  Serial.print("\tday:");
-  Serial.print(tm.tm_mday);         // day of month
-  Serial.print("\thour:");
-  Serial.print(tm.tm_hour);         // hours since midnight  0-23
-  Serial.print("\tmin:");
-  Serial.print(tm.tm_min);          // minutes after the hour  0-59
-  Serial.print("\tsec:");
-  Serial.print(tm.tm_sec);          // seconds after the minute  0-61*
-  Serial.print("\twday");
-  Serial.print(tm.tm_wday);         // days since Sunday 0-6
+  // Serial.print("\tmonth:");
+  // Serial.print(tm.tm_mon + 1);      // January = 0 (!)
+  // Serial.print("\tday:");
+  // Serial.print(tm.tm_mday);         // day of month
+  // Serial.print("\thour:");
+  // Serial.print(tm.tm_hour);         // hours since midnight  0-23
+  // Serial.print("\tmin:");
+  // Serial.print(tm.tm_min);          // minutes after the hour  0-59
+  // Serial.print("\tsec:");
+  // Serial.print(tm.tm_sec);          // seconds after the minute  0-61*
+  // Serial.print("\twday");
+  // Serial.print(tm.tm_wday);         // days since Sunday 0-6
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -263,7 +266,7 @@ float parsingArsagera(String arsaData) // Функция вывод значен
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-String getTime()
+String getTime() // Дата должна быть за прошлый день Если сегодня 5 число То нужно вывести информацию за 4 Т.к биржевые ориентиры обновляются только на следющий день
 {
   String dateFormated;
   // отдельно выписываем год месяц и дату и приводим к виду XX 
@@ -302,6 +305,10 @@ String smile;
 void loop() 
 {
   Serial.print("\nStart Loop");
+
+  time(&now);
+  localtime_r(&now, &tm);
+  
   SyncTime(); // Запуск Синхронизации
   String date_for_Arsa = getTime();  // Получаем дату для запроса
   String arsaData = reqArsagera(date_for_Arsa); // Передаем в запрос нужную дату 
