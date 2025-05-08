@@ -319,12 +319,8 @@ void loop()
     Serial.print(arsaData);
 
     buffValue = parsingArsagera(arsaData);
-    if(buffValue == -1) // Если метрика не найдена 
-    {
-      Serial.print("\nbuffValue -1\n");
-    }
-
-    if(buffValue != 0) // Если ошибки парсинга метрики нет 
+  
+    if(buffValue != -1) // Если ошибки парсинга метрики нет 
     {
       valueMetrik = buffValue;
       Serial.print("Arsagere value:");
