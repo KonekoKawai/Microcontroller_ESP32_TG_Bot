@@ -40,6 +40,9 @@ UniversalTelegramBot bot(BOTtoken, clientTgBot);
 
 void SyncTime() // Запуск Синхронизации до 21:55+ по +5 времени
 {
+  time(&now);
+  localtime_r(&now, &tm);
+
   Serial.print("\nStart Sync");
   int hour_int = tm.tm_hour+1;
   int minute_int = tm.tm_min;
@@ -105,7 +108,7 @@ void setup() { // Первичная настройка отладки + под�
     while(tm.tm_year + 1900 == 1970)
     {
       delay(oneMinuteMlSecond*2);
-      Serial.print("year not formated (1970) - reboot ");
+      Serial.print("year not formated (1970) - reboot \n");
       configTime(NTP_TZ_SETTING, NTP_SERVER); // Установка времени 
       time(&now);
       localtime_r(&now, &tm);
@@ -268,7 +271,11 @@ float parsingArsagera(String arsaData) // Функция вывод значен
 
 String getTime() // Дата должна быть за прошлый день Если сегодня 5 число То нужно вывести информацию за 4 Т.к биржевые ориентиры обновляются только на следющий день
 {
+  time(&now);
+  localtime_r(&now, &tm);
+
   String dateFormated;
+  
   // отдельно выписываем год месяц и дату и приводим к виду XX 
   String year = String(tm.tm_year + 1900);
   String month;
@@ -306,10 +313,9 @@ void loop()
 {
   Serial.print("\nStart Loop");
 
-  time(&now);
-  localtime_r(&now, &tm);
   
   SyncTime(); // Запуск Синхронизации
+
   String date_for_Arsa = getTime();  // Получаем дату для запроса
   String arsaData = reqArsagera(date_for_Arsa); // Передаем в запрос нужную дату 
   if(arsaData != "0") // Если ошибка конекта нет
@@ -355,6 +361,6 @@ void loop()
 
   }
 
-  delay(oneDayMlSecond-2*oneHourMlSecond); // Сутки - 2 часа Для синхронизации
+  delay(oneHourMlSecond); // Сутки - 2 часа Для синхронизации
   Serial.print("\End Loop");
 }
