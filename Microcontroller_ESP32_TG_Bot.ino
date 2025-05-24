@@ -114,21 +114,6 @@ void setup() { // Первичная настройка отладки + под�
       localtime_r(&now, &tm);
     }
   }
-
-  Serial.print("year:");
-  Serial.print(tm.tm_year + 1900);  // years since 1900
-  // Serial.print("\tmonth:");
-  // Serial.print(tm.tm_mon + 1);      // January = 0 (!)
-  // Serial.print("\tday:");
-  // Serial.print(tm.tm_mday);         // day of month
-  // Serial.print("\thour:");
-  // Serial.print(tm.tm_hour);         // hours since midnight  0-23
-  // Serial.print("\tmin:");
-  // Serial.print(tm.tm_min);          // minutes after the hour  0-59
-  // Serial.print("\tsec:");
-  // Serial.print(tm.tm_sec);          // seconds after the minute  0-61*
-  // Serial.print("\twday");
-  // Serial.print(tm.tm_wday);         // days since Sunday 0-6
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -197,6 +182,7 @@ String reqArsagera(String date_for_Arsa) // Функция для получен
 float parsingArsagera(String arsaData) // Функция вывод значение метрики "nav_per_share": XXXXX.XX
 {
   // Принимаем arsaData 
+
   // Server: nginx
   // Date: Fri, 02 May 2025 11:29:35 GMT
   // Content-Type: application/json
@@ -206,7 +192,9 @@ float parsingArsagera(String arsaData) // Функция вывод значен
   // expires: -1
 
   // {"data":[{"date":"2025-04-29","nav_per_share":15445.08,"total_net_assets":2641624248.55}]}
-  Serial.println("\nSTART - parsingArsagera");
+
+  
+  Serial.println("\nSTART - parsingArsagera\n");
   int count = 0;
   bool flag = false;
   String jsonArsaData;
@@ -261,17 +249,17 @@ float parsingArsagera(String arsaData) // Функция вывод значен
 
   if (flag == false) // В случае Если мы проишлись по данным и не нашли их То прекращаем дальнейший поиск 
       return -1;
-
-  Serial.println("END - parsingArsagera: " + value);
+  Serial.println("\nEND - parsingArsagera OK: " + value);
   return value.toFloat(); 
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-String getTime() // Дата должна быть за прошлый день Если сегодня 5 число То нужно вывести информацию за 4 Т.к биржевые ориентиры обновляются только на следющий день
+String getTime(int countDay) // Дата должна быть за какой-то предыдущий период Число countDay определяет на сколько дней назад мы двигаемся // ОБЫЧНО: от 1 до последнего прогноза
 {
   time(&now);
+  now = now - countDay*oneDaySecond; // На сколько дней назад отправляемся
   localtime_r(&now, &tm);
 
   String dateFormated;
@@ -285,15 +273,10 @@ String getTime() // Дата должна быть за прошлый день 
     month = String(tm.tm_mon + 1);
 
   String day;
-  if(tm.tm_mday < 11)
-  {
-    if(tm.tm_mday == 1)
-      day = "0" + String(tm.tm_mday);
-    else
-      day = "0" + String(tm.tm_mday-1);
-  }
+  if(tm.tm_mday < 10)
+    day = "0" + String(tm.tm_mday);
   else
-    day = String(tm.tm_mday-1);
+    day = String(tm.tm_mday);
   
   dateFormated = year + "-" + month + "-" + day;
   Serial.print("\n\nDate Formated: " + dateFormated);
@@ -306,61 +289,72 @@ String getTime() // Дата должна быть за прошлый день 
 float preValueMetrik = 0;
 float diffMetrik = 0;
 float buffValue = 0;
+int buffPreDay = 1;
 float valueMetrik;
 String smile;
 
 void loop() 
 {
-  Serial.print("\nStart Loop");
-
-  
+  Serial.print("\nStart Loop"); 
   SyncTime(); // Запуск Синхронизации
-
-  String date_for_Arsa = getTime();  // Получаем дату для запроса
+  String date_for_Arsa = getTime(buffPreDay);  // Получаем дату для запроса
   String arsaData = reqArsagera(date_for_Arsa); // Передаем в запрос нужную дату 
-  if(arsaData != "0") // Если ошибка конекта нет
-  {
-
-    Serial.print("Arsagere requests:\n");
-    Serial.print(arsaData);
-
-    buffValue = parsingArsagera(arsaData);
   
-    if(buffValue != -1) // Если ошибки парсинга метрики нет 
+  while(true) // Цикл поиска последней существующей метрики
+  {
+    if(arsaData != "0") // Если ошибка конекта нет
     {
-      valueMetrik = buffValue;
-      Serial.print("Arsagere value:");
-      Serial.print(String(valueMetrik));
-      
-      if (valueMetrik != 0 and preValueMetrik != 0)
-      {
-        if (valueMetrik / preValueMetrik >= 1)
-        {
-          diffMetrik = round((valueMetrik / preValueMetrik - 1) * 1000) / 10;
-          smile = "📈";
-        }
-        else
-        {
-          diffMetrik = round((valueMetrik / preValueMetrik - 1) * 1000) / 10;
-          smile = "📉";
-        }
+      Serial.print("Arsagere requests:\n");
+      Serial.print(arsaData);
 
-        preValueMetrik = valueMetrik;
-        bot.sendMessage(CHAT_ID, "💰Биржевые ориентиры <b>Арсагера ФА</b>💰 \n\nСтоимость пая на дату <b>" + date_for_Arsa + "</b> — <b><u>" + String(valueMetrik) + "</u></b> рублей \n\nЦена за пай изменилась на <b>" + diffMetrik + "%" + smile + "</b> \n\n#Арсагера_ФА", "HTML");
+      buffValue = parsingArsagera(arsaData);
+      if(buffValue == -1) // Если ошибки парсинга: метрики - нет
+      {
+        buffPreDay++;
+      } // Если метрика нашлась 
+      else
+        break;
+    }
+    delay(oneMinuteMlSecond/6); // Запрос раз в 10 секунд Чтобы не перегружать API Арсагеры
+    date_for_Arsa = getTime(buffPreDay);  // Получаем дату для запроса
+    arsaData = reqArsagera(date_for_Arsa); // Передаем в запрос нужную дату 
+
+    if(buffPreDay > 31) // Для непредвиденных ситуаций
+      buffPreDay = 1;
+  }
+  
+
+  valueMetrik = buffValue;
+  Serial.print("\nArsagere value:");
+  Serial.print(String(valueMetrik));
+  
+  if (preValueMetrik != 0) // Если не первый запрос
+  {
+    if(preValueMetrik != valueMetrik) // Если предыдущее и текущее значение равны Значит выбран скорее всего тот же день и мы ничего не делаем
+    {
+      if (valueMetrik / preValueMetrik >= 1)
+      {
+        diffMetrik = round((valueMetrik / preValueMetrik - 1) * 1000) / 10;
+        smile = "📈";
       }
       else
       {
-        bot.sendMessage(CHAT_ID, "💰Биржевые ориентиры <b>Арсагера ФА</b>💰 \n\nСтоимость пая на дату <b>" + date_for_Arsa + "</b> — <b><u>" + String(valueMetrik) + "</u></b> рублей \n\n#Арсагера_ФА", "HTML");
-        preValueMetrik = valueMetrik;
-    
+        diffMetrik = round((valueMetrik / preValueMetrik - 1) * 1000) / 10;
+        smile = "📉";
       }
-      
+
+      preValueMetrik = valueMetrik;
+      bot.sendMessage(CHAT_ID, "💰Биржевые ориентиры <b>Арсагера ФА</b>💰 \n\nСтоимость пая на дату <b>" + date_for_Arsa + "</b> — <b><u>" + String(valueMetrik) + "</u></b> рублей \n\nЦена за пай изменилась на <b>" + diffMetrik + "%" + smile + "</b> \n\n#Арсагера_ФА", "HTML");
     }
-    else
-      Serial.print("Not found metrik");
+  }
+  else // Если первый запрос
+  {
+    bot.sendMessage(CHAT_ID, "💰Биржевые ориентиры <b>Арсагера ФА</b>💰 \n\nСтоимость пая на дату <b>" + date_for_Arsa + "</b> — <b><u>" + String(valueMetrik) + "</u></b> рублей \n\n#Арсагера_ФА", "HTML");
+    preValueMetrik = valueMetrik;
 
   }
 
-  delay(oneHourMlSecond); // Сутки - 2 часа Для синхронизации
+  delay(oneHourMlSecond); // Делей на часик
+  buffPreDay = 1; // Меняем значение отката дней на 1;
   Serial.print("\End Loop");
 }
