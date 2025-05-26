@@ -43,12 +43,12 @@ void SyncTime() // Запуск Синхронизации до 21:55+ по +5 �
   time(&now);
   localtime_r(&now, &tm);
 
-  Serial.print("\nStart Sync");
+  //Serial.print("\nStart Sync");
   int hour_int = tm.tm_hour+1;
   int minute_int = tm.tm_min;
 
-  Serial.print("\nHour: " + String(hour_int));
-  Serial.print(" : Minute: " + String(minute_int));
+  //Serial.print("\nHour: " + String(hour_int));
+  //Serial.print(" : Minute: " + String(minute_int));
 
   while (hour_int != 21)
   {
@@ -56,26 +56,26 @@ void SyncTime() // Запуск Синхронизации до 21:55+ по +5 �
         hour_int = 0;
     hour_int++;
     delay(oneHourMlSecond); // ЖДдём час
-    Serial.print("\nCurrent hour: " + String(hour_int));
+    //Serial.print("\nCurrent hour: " + String(hour_int));
   }
-  Serial.print("\n---------TIME 21:XX--------\n\n");
+  //Serial.print("\n---------TIME 21:XX--------\n\n");
   while (minute_int < 55)
   {
     if (minute_int == 60)
         minute_int = 0;
     minute_int++;
     delay(oneMinuteMlSecond); // ЖДдём минуту
-    Serial.print("\nCurrent minute: " + String(minute_int));
+    //Serial.print("\nCurrent minute: " + String(minute_int));
   }
   //Serial.print("\min:" + String(tm.tm_min));
-  Serial.print("\n---------TIME 21:55+--------\n\n");
-  Serial.print("\nSync - successful");
+  //Serial.print("\n---------TIME 21:55+--------\n\n");
+  //Serial.print("\nSync - successful");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void setup() { // Первичная настройка отладки + подключение к Wi-Fi и TG боту
-  Serial.begin(115200); // Для отладки 
+  //Serial.begin(115200); // Для отладки 
   delay(100);
 
   #ifdef ESP8266
@@ -92,11 +92,11 @@ void setup() { // Первичная настройка отладки + под�
   while (WiFi.status() != WL_CONNECTED) 
   {
     delay(1000);
-    Serial.println("Connecting to WiFi..");
+    //Serial.println("Connecting to WiFi..");
   }
   // Выводим IP нашего контроллера 
-  Serial.println(WiFi.localIP());
-  Serial.println("Connect successful");
+  //Serial.println(WiFi.localIP());
+  //Serial.println("Connect successful");
   delay(1000);
   
   configTime(NTP_TZ_SETTING, NTP_SERVER); // Установка времени 
@@ -108,7 +108,7 @@ void setup() { // Первичная настройка отладки + под�
     while(tm.tm_year + 1900 == 1970)
     {
       delay(oneMinuteMlSecond*2);
-      Serial.print("year not formated (1970) - reboot \n");
+      //Serial.print("year not formated (1970) - reboot \n");
       configTime(NTP_TZ_SETTING, NTP_SERVER); // Установка времени 
       time(&now);
       localtime_r(&now, &tm);
@@ -123,27 +123,27 @@ String reqArsagera(String date_for_Arsa) // Функция для получен
   WiFiClientSecure arsaClient; // Создаем клиента для подключения 
 
   arsaClient.setInsecure(); // Говорим Что будем подключаться без использования сертификатов
-  Serial.print("\nConnecting to ");
-  Serial.print("https://arsagera.ru\n");
+  //Serial.print("\nConnecting to ");
+  //Serial.print("https://arsagera.ru\n");
 
   if (!arsaClient.connect("185.44.14.62", 443)) 
   { // Конектимся на IP арсагеры 
-    Serial.println("Connection FAILED To arsaURL");
+     Serial.println("Connection FAILED To arsaURL");
      return "0"; // Если ошибка конекта возвращаемся 
   }
   else
   {
     Serial.println("Connection To arsaURL SUCCESSEFUL");
   }
-  Serial.print("\nRequesting URL: ");
-  Serial.println("https://arsagera.ru/api/v1/funds/fa/fund-metrics/?date=" + date_for_Arsa);
+  //Serial.print("\nRequesting URL: ");
+  //Serial.println("https://arsagera.ru/api/v1/funds/fa/fund-metrics/?date=" + date_for_Arsa);
 
   arsaClient.println(String("GET https://arsagera.ru/api/v1/funds/fa/fund-metrics/?date=") + date_for_Arsa + " HTTP/1.0"); // Кидаем запрос на Арсагера API с нужной датой
   arsaClient.println("Host: 185.44.14.62"); // Хост арсагеры 
   arsaClient.println("Connection: close");
   arsaClient.println();
 
-  Serial.println("Request sent\n");
+  //Serial.println("Request sent\n");
 
   while (arsaClient.connected()) 
   { // Получаем данные 
@@ -194,7 +194,7 @@ float parsingArsagera(String arsaData) // Функция вывод значен
   // {"data":[{"date":"2025-04-29","nav_per_share":15445.08,"total_net_assets":2641624248.55}]}
 
   
-  Serial.println("\nSTART - parsingArsagera\n");
+  //Serial.println("\nSTART - parsingArsagera\n");
   int count = 0;
   bool flag = false;
   String jsonArsaData;
@@ -249,7 +249,7 @@ float parsingArsagera(String arsaData) // Функция вывод значен
 
   if (flag == false) // В случае Если мы проишлись по данным и не нашли их То прекращаем дальнейший поиск 
       return -1;
-  Serial.println("\nEND - parsingArsagera OK: " + value);
+  //Serial.println("\nEND - parsingArsagera OK: " + value);
   return value.toFloat(); 
 }
 
@@ -279,8 +279,8 @@ String getTime(int countDay) // Дата должна быть за какой-�
     day = String(tm.tm_mday);
   
   dateFormated = year + "-" + month + "-" + day;
-  Serial.print("\n\nDate Formated: " + dateFormated);
-  Serial.print("\n");
+  //Serial.print("\n\nDate Formated: " + dateFormated);
+  //Serial.print("\n");
   
   return dateFormated; // Должен быть в виде "2025-04-22"
 }
@@ -295,7 +295,7 @@ String smile;
 
 void loop() 
 {
-  Serial.print("\nStart Loop"); 
+  //Serial.print("\nStart Loop"); 
   SyncTime(); // Запуск Синхронизации
   String date_for_Arsa = getTime(buffPreDay);  // Получаем дату для запроса
   String arsaData = reqArsagera(date_for_Arsa); // Передаем в запрос нужную дату 
@@ -304,8 +304,8 @@ void loop()
   {
     if(arsaData != "0") // Если ошибка конекта нет
     {
-      Serial.print("Arsagere requests:\n");
-      Serial.print(arsaData);
+      //Serial.print("Arsagere requests:\n");
+      //Serial.print(arsaData);
 
       buffValue = parsingArsagera(arsaData);
       if(buffValue == -1) // Если ошибки парсинга: метрики - нет
@@ -322,11 +322,9 @@ void loop()
     if(buffPreDay > 31) // Для непредвиденных ситуаций
       buffPreDay = 1;
   }
-  
-
   valueMetrik = buffValue;
-  Serial.print("\nArsagere value:");
-  Serial.print(String(valueMetrik));
+  //Serial.print("\nArsagere value:");
+  //Serial.print(String(valueMetrik));
   
   if (preValueMetrik != 0) // Если не первый запрос
   {
@@ -356,5 +354,5 @@ void loop()
 
   delay(oneHourMlSecond); // Делей на часик
   buffPreDay = 1; // Меняем значение отката дней на 1;
-  Serial.print("\End Loop");
+  //Serial.print("\End Loop");
 }
