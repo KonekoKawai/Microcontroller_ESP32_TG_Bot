@@ -43,12 +43,12 @@ void SyncTime() // Запуск Синхронизации до 21:55+ по +5 �
   time(&now);
   localtime_r(&now, &tm);
 
-  //Serial.print("\nStart Sync");
+  Serial.print("\nStart Sync");
   int hour_int = tm.tm_hour+1;
   int minute_int = tm.tm_min;
 
-  //Serial.print("\nHour: " + String(hour_int));
-  //Serial.print(" : Minute: " + String(minute_int));
+  Serial.print("\nHour: " + String(hour_int));
+  Serial.print(" : Minute: " + String(minute_int));
 
   while (hour_int != 21)
   {
@@ -56,26 +56,26 @@ void SyncTime() // Запуск Синхронизации до 21:55+ по +5 �
         hour_int = 0;
     hour_int++;
     delay(oneHourMlSecond); // ЖДдём час
-    //Serial.print("\nCurrent hour: " + String(hour_int));
+    Serial.print("\nCurrent hour: " + String(hour_int));
   }
-  //Serial.print("\n---------TIME 21:XX--------\n\n");
-  while (minute_int < 55)
+  Serial.print("\n---------TIME 21:XX--------\n\n");
+  while (minute_int < 50)
   {
     if (minute_int == 60)
         minute_int = 0;
     minute_int++;
     delay(oneMinuteMlSecond); // ЖДдём минуту
-    //Serial.print("\nCurrent minute: " + String(minute_int));
+    Serial.print("\nCurrent minute: " + String(minute_int));
   }
   //Serial.print("\min:" + String(tm.tm_min));
-  //Serial.print("\n---------TIME 21:55+--------\n\n");
-  //Serial.print("\nSync - successful");
+  Serial.print("\n---------TIME 21:55+--------\n\n");
+  Serial.print("\nSync - successful");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void setup() { // Первичная настройка отладки + подключение к Wi-Fi и TG боту
-  //Serial.begin(115200); // Для отладки 
+  Serial.begin(115200); // Для отладки 
   delay(100);
 
   #ifdef ESP8266
@@ -92,11 +92,11 @@ void setup() { // Первичная настройка отладки + под�
   while (WiFi.status() != WL_CONNECTED) 
   {
     delay(1000);
-    //Serial.println("Connecting to WiFi..");
+    Serial.println("Connecting to WiFi..");
   }
   // Выводим IP нашего контроллера 
-  //Serial.println(WiFi.localIP());
-  //Serial.println("Connect successful");
+  Serial.println(WiFi.localIP());
+  Serial.println("Connect successful");
   delay(1000);
   
   configTime(NTP_TZ_SETTING, NTP_SERVER); // Установка времени 
@@ -108,7 +108,7 @@ void setup() { // Первичная настройка отладки + под�
     while(tm.tm_year + 1900 == 1970)
     {
       delay(oneMinuteMlSecond*2);
-      //Serial.print("year not formated (1970) - reboot \n");
+      Serial.print("year not formated (1970) - reboot \n");
       configTime(NTP_TZ_SETTING, NTP_SERVER); // Установка времени 
       time(&now);
       localtime_r(&now, &tm);
@@ -118,32 +118,34 @@ void setup() { // Первичная настройка отладки + под�
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-String reqArsagera(String date_for_Arsa) // Функция для получения данных с Арсагера API
+String reqArsagera(String date_for_Arsa,  String url_api) // Функция для получения данных с Арсагера API
 {
   WiFiClientSecure arsaClient; // Создаем клиента для подключения 
 
   arsaClient.setInsecure(); // Говорим Что будем подключаться без использования сертификатов
-  //Serial.print("\nConnecting to ");
-  //Serial.print("https://arsagera.ru\n");
+  Serial.print("\nConnecting to ");
+  Serial.print("https://arsagera.ru\n");
 
   if (!arsaClient.connect("185.44.14.62", 443)) 
   { // Конектимся на IP арсагеры 
-     Serial.println("Connection FAILED To arsaURL");
+    Serial.println("Connection FAILED To arsaURL");
      return "0"; // Если ошибка конекта возвращаемся 
   }
   else
   {
     Serial.println("Connection To arsaURL SUCCESSEFUL");
   }
-  //Serial.print("\nRequesting URL: ");
-  //Serial.println("https://arsagera.ru/api/v1/funds/fa/fund-metrics/?date=" + date_for_Arsa);
+  Serial.print("\nRequesting URL: ");
+  Serial.println(url_api + date_for_Arsa);
 
-  arsaClient.println(String("GET https://arsagera.ru/api/v1/funds/fa/fund-metrics/?date=") + date_for_Arsa + " HTTP/1.0"); // Кидаем запрос на Арсагера API с нужной датой
+  arsaClient.println(String("GET ") + url_api + date_for_Arsa + " HTTP/1.0"); // Кидаем запрос на Арсагера API с нужной датой
+  arsaClient.println("Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"); 
+  arsaClient.println("user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"); 
   arsaClient.println("Host: 185.44.14.62"); // Хост арсагеры 
   arsaClient.println("Connection: close");
   arsaClient.println();
 
-  //Serial.println("Request sent\n");
+  Serial.println("Request sent\n");
 
   while (arsaClient.connected()) 
   { // Получаем данные 
@@ -194,7 +196,7 @@ float parsingArsagera(String arsaData) // Функция вывод значен
   // {"data":[{"date":"2025-04-29","nav_per_share":15445.08,"total_net_assets":2641624248.55}]}
 
   
-  //Serial.println("\nSTART - parsingArsagera\n");
+  Serial.println("\nSTART - parsingArsagera\n");
   int count = 0;
   bool flag = false;
   String jsonArsaData;
@@ -249,7 +251,7 @@ float parsingArsagera(String arsaData) // Функция вывод значен
 
   if (flag == false) // В случае Если мы проишлись по данным и не нашли их То прекращаем дальнейший поиск 
       return -1;
-  //Serial.println("\nEND - parsingArsagera OK: " + value);
+  Serial.println("\nEND - parsingArsagera OK: " + value);
   return value.toFloat(); 
 }
 
@@ -279,80 +281,129 @@ String getTime(int countDay) // Дата должна быть за какой-�
     day = String(tm.tm_mday);
   
   dateFormated = year + "-" + month + "-" + day;
-  //Serial.print("\n\nDate Formated: " + dateFormated);
-  //Serial.print("\n");
+  Serial.print("\n\nDate Formated: " + dateFormated);
+  Serial.print("\n");
   
   return dateFormated; // Должен быть в виде "2025-04-22"
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-float preValueMetrik = 0;
-float diffMetrik = 0;
-float buffValue = 0;
+float preValueMetrik_FA = 0;
+float diffMetrik_FA = 0;
+float buffValue_FA = 0;
+float valueMetrik_FA;
+
+float preValueMetrik_f64 = 0;
+float diffMetrik_f64 = 0;
+float buffValue_f64 = 0;
+float valueMetrik_f64;
+
+String smile_FA;
+String smile_f64;
+
+String url_FA = "https://arsagera.ru/api/v1/funds/fa/fund-metrics/?date=";
+String url_f64 = "https://arsagera.ru/api/v1/funds/f64/fund-metrics/?date=";
 int buffPreDay = 1;
-float valueMetrik;
-String smile;
 
 void loop() 
 {
-  //Serial.print("\nStart Loop"); 
+  Serial.print("\nStart Loop"); 
   SyncTime(); // Запуск Синхронизации
   String date_for_Arsa = getTime(buffPreDay);  // Получаем дату для запроса
-  String arsaData = reqArsagera(date_for_Arsa); // Передаем в запрос нужную дату 
+
+  String arsaDataFA = reqArsagera(date_for_Arsa, url_FA); // Передаем в запрос нужную дату 
+  delay(oneMinuteMlSecond/6); // Делаем небольшую паузу между запросами
+  String arsaDataF64 = reqArsagera(date_for_Arsa, url_f64); // Передаем в запрос нужную дату 
   
   while(true) // Цикл поиска последней существующей метрики
   {
-    if(arsaData != "0") // Если ошибка конекта нет
+    if(arsaDataFA != "0" && arsaDataF64 != "0") // Если ошибка конекта нет
     {
-      //Serial.print("Arsagere requests:\n");
-      //Serial.print(arsaData);
+      Serial.print("\nArsagere requests FA:\n");
+      Serial.print(arsaDataFA);
+      Serial.print("\nArsagere requests 6.4:\n");
+      Serial.print(arsaDataF64);
 
-      buffValue = parsingArsagera(arsaData);
-      if(buffValue == -1) // Если ошибки парсинга: метрики - нет
+      buffValue_FA = parsingArsagera(arsaDataFA);
+      buffValue_f64 = parsingArsagera(arsaDataF64);
+      Serial.print("\n\nbuffValueFA:\n" + String(buffValue_FA));
+      Serial.print("\n\nbuffValue6.4:\n" + String(buffValue_f64));
+
+      if(buffValue_FA == -1) // Если ошибки парсинга: метрики - нет
       {
         buffPreDay++;
       } // Если метрика нашлась 
       else
         break;
     }
-    delay(oneMinuteMlSecond/6); // Запрос раз в 10 секунд Чтобы не перегружать API Арсагеры
+    delay(oneMinuteMlSecond/5); // Запрос раз в минуты Чтобы не перегружать API Арсагеры
     date_for_Arsa = getTime(buffPreDay);  // Получаем дату для запроса
-    arsaData = reqArsagera(date_for_Arsa); // Передаем в запрос нужную дату 
+
+    arsaDataFA = reqArsagera(date_for_Arsa, url_FA); // Передаем в запрос нужную дату 
+    delay(oneMinuteMlSecond/6); // Делаем небольшую паузу между запросами
+    arsaDataF64 = reqArsagera(date_for_Arsa, url_f64); // Передаем в запрос нужную дату 
 
     if(buffPreDay > 31) // Для непредвиденных ситуаций
       buffPreDay = 1;
   }
-  valueMetrik = buffValue;
-  //Serial.print("\nArsagere value:");
-  //Serial.print(String(valueMetrik));
   
-  if (preValueMetrik != 0) // Если не первый запрос
+
+  valueMetrik_FA = buffValue_FA;
+  valueMetrik_f64 = buffValue_f64;
+  Serial.print("\nArsagereFA value:");
+  Serial.print(String(valueMetrik_FA));
+
+  Serial.print("\nArsagere6.4 value:");
+  Serial.print(String(valueMetrik_f64));
+  
+  if (preValueMetrik_FA != 0) // Если не первый запрос
   {
-    if(preValueMetrik != valueMetrik) // Если предыдущее и текущее значение равны Значит выбран скорее всего тот же день и мы ничего не делаем
+    if(preValueMetrik_FA != valueMetrik_FA) // Если предыдущее и текущее значение равны Значит выбран скорее всего тот же день
     {
-      if (valueMetrik / preValueMetrik >= 1)
+      if (valueMetrik_FA / preValueMetrik_FA >= 1)
       {
-        diffMetrik = round((valueMetrik / preValueMetrik - 1) * 1000) / 10;
-        smile = "📈";
+        diffMetrik_FA = round((valueMetrik_FA / preValueMetrik_FA - 1) * 1000) / 10;
+        smile_FA = "📈";
       }
       else
       {
-        diffMetrik = round((valueMetrik / preValueMetrik - 1) * 1000) / 10;
-        smile = "📉";
+        diffMetrik_FA = round((valueMetrik_FA / preValueMetrik_FA - 1) * 1000) / 10;
+        smile_FA = "📉";
       }
 
-      preValueMetrik = valueMetrik;
-      bot.sendMessage(CHAT_ID, "💰Биржевые ориентиры <b>Арсагера ФА</b>💰 \n\nСтоимость пая на дату <b>" + date_for_Arsa + "</b> — <b><u>" + String(valueMetrik) + "</u></b> рублей \n\nЦена за пай изменилась на <b>" + diffMetrik + "%" + smile + "</b> \n\n#Арсагера_ФА", "HTML");
+      if (valueMetrik_f64 / preValueMetrik_f64 >= 1)
+      {
+        diffMetrik_f64 = round((valueMetrik_f64 / preValueMetrik_f64 - 1) * 1000) / 10;
+        smile_f64 = "📈";
+      }
+      else
+      {
+        diffMetrik_f64 = round((valueMetrik_f64 / preValueMetrik_f64 - 1) * 1000) / 10;
+        smile_f64 = "📉";
+      }
+
+      preValueMetrik_FA = valueMetrik_FA;
+      preValueMetrik_f64 = valueMetrik_f64;
+
+      String message = "💰Биржевые ориентиры <b>Арсагера</b>💰\n Состояние на <b>" + date_for_Arsa + "</b>\n\nСтоимость паев:\n\n";
+      message = message + "<b>Арсагера ФА</b> — <b><u>" + String(valueMetrik_FA) + "</u></b> рублей. \nЦена за пай изменилась на <b>" + diffMetrik_FA + "%</b>" + smile_FA + "\n\n";
+      message = message + "<b>Арсагера 6.4</b> — <b><u>" + String(valueMetrik_f64) + "</u></b> рублей. \nЦена за пай изменилась на <b>" + diffMetrik_f64 + "%</b>" + smile_f64 + "\n\n";
+      message = message + "#Арсагера";
+      bot.sendMessage(CHAT_ID, message , "HTML");
     }
   }
   else // Если первый запрос
   {
-    bot.sendMessage(CHAT_ID, "💰Биржевые ориентиры <b>Арсагера ФА</b>💰 \n\nСтоимость пая на дату <b>" + date_for_Arsa + "</b> — <b><u>" + String(valueMetrik) + "</u></b> рублей \n\n#Арсагера_ФА", "HTML");
-    preValueMetrik = valueMetrik;
-
+    String message = "💰Биржевые ориентиры <b>Арсагера</b>💰\n Состояние на <b>" + date_for_Arsa + "</b>\n\nСтоимость паев:\n\n";
+    message = message + "<b>Арсагера ФА</b> — <b><u>" + String(valueMetrik_FA) + "</u></b> рублей.\n\n";
+    message = message + "<b>Арсагера 6.4</b> — <b><u>" + String(valueMetrik_f64) + "</u></b> рублей.\n\n";
+    message = message + "#Арсагера";
+    bot.sendMessage(CHAT_ID, message, "HTML");
+    preValueMetrik_FA = valueMetrik_FA;
+    preValueMetrik_f64 = valueMetrik_f64;
   }
 
-  delay(oneHourMlSecond); // Делей на часик
+  delay(oneHourMlSecond); // Делей на часок
   buffPreDay = 1; // Меняем значение отката дней на 1;
-  //Serial.print("\End Loop");
+  Serial.print("\nEnd Loop");
 }
