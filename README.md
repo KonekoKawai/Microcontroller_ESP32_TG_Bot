@@ -11,7 +11,7 @@ Telegram API в свою очередь отправляет пост в мой 
 <h2>Пример работы</h2>
 <h2> 
   
-  ![Example_Work](https://raw.githubusercontent.com/KonekoKawai/Microcontroller_ESP32_TG_Bot/refs/heads/main/example_of_work.png) 
+  ![Example_Work](https://raw.githubusercontent.com/KonekoKawai/Microcontroller_ESP32_TG_Bot/refs/heads/main/example_of_work.jpg) 
 </h2>
 
 
